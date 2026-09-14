@@ -10,7 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TOOL: "LophineLabs/AutoUpdateUpstream"
-      UPSTREAM_URL: "https://github.com/PaperMC/Folia.git"
+      # 多个上游仓库地址，每行一个（第一个为主仓库，后续为备用镜像）
+      UPSTREAM_URLS: |
+        https://github.com/PaperMC/Folia.git
+        https://github.com/LophineLabs/Folia.git
       REF: "foliaRef"
       TITLE: "Update Upstream (Folia)"
       REF_COMMIT: "auto-update/upstream"
@@ -31,11 +34,20 @@ jobs:
           else
             LOCAL_REF=$(grep '^${{ env.REF }}=' gradle.properties | cut -d'=' -f2 | tr -d '[:space:]')
           fi
-          UPSTREAM_REF=$(git ls-remote "${{ env.UPSTREAM_URL }}" HEAD | cut -f1)
           echo "Local ref: $LOCAL_REF"
-          echo "Upstream ref: $UPSTREAM_REF"
-          if [ "$LOCAL_REF" = "$UPSTREAM_REF" ]; then
-            echo "Upstream is already up to date, skipping all steps."
+          # 遍历所有上游仓库，任一有更新则不跳过
+          SKIP=true
+          while IFS= read -r url; do
+            url=$(echo "$url" | tr -d '[:space:]')
+            if [ -z "$url" ]; then continue; fi
+            UPSTREAM_REF=$(git ls-remote "$url" HEAD | cut -f1)
+            echo "Upstream [$url] ref: $UPSTREAM_REF"
+            if [ "$LOCAL_REF" != "$UPSTREAM_REF" ]; then
+              SKIP=false
+            fi
+          done <<< "${{ env.UPSTREAM_URLS }}"
+          if [ "$SKIP" = "true" ]; then
+            echo "All upstreams are up to date, skipping all steps."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -117,13 +129,22 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          java -jar tool/build/libs/*.jar --repo=${{ github.workspace }}/repo
+          # 将多行 UPSTREAM_URLS 转换为多个 --url 参数
+          URL_ARGS=""
+          while IFS= read -r url; do
+            url=$(echo "$url" | tr -d '[:space:]')
+            if [ -n "$url" ]; then
+              URL_ARGS="$URL_ARGS --url=$url"
+            fi
+          done <<< "${{ env.UPSTREAM_URLS }}"
+          java -jar tool/build/libs/*.jar --repo=${{ github.workspace }}/repo $URL_ARGS
 
       - name: Get upstream commit messages
         if: steps.uptodate.outputs.skip != 'true'
         working-directory: repo
         run: |
-          UPSTREAM_URL="${{ env.UPSTREAM_URL }}"
+          # 使用第一个上游仓库获取 commit 信息
+          UPSTREAM_URL=$(echo "${{ env.UPSTREAM_URLS }}" | head -n 1 | tr -d '[:space:]')
           UPSTREAM_WEB_URL="${UPSTREAM_URL%.git}"
           OLD_REF="${{ steps.oldref.outputs.old_ref }}"
           NEW_REF=$(grep '^${{ env.REF }}=' gradle.properties | cut -d'=' -f2 | tr -d '[:space:]')
