@@ -320,7 +320,7 @@ public class ServerI18nUtil {
         }
     }
 
-    public static String getLocalizedComment(String key) {
+    public static String getLocalizedText(String key) {
         String current = Language.getInstance().getOrDefault(key, "");
         if (!current.isBlank()) return current;
         return Language.DEFAULT_INSTANCE.getOrDefault(key, "");
