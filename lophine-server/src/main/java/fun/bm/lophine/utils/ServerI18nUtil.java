@@ -326,6 +326,14 @@ public class ServerI18nUtil {
         return Language.DEFAULT_INSTANCE.getOrDefault(key, "");
     }
 
+    public static String getFormatedLocalizedText(String key, Object... args) {
+        String template = ServerI18nUtil.getLocalizedText(key);
+        for (int i = 0; i < args.length; i++) {
+            template = template.replace("{" + i + "}", String.valueOf(args[i]));
+        }
+        return template;
+    }
+
     private static class UnsupportedLanguageException extends Exception {
     }
 

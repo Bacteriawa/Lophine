@@ -197,5 +197,9 @@
   "luminol.optimizations.variable_entity_waking_up.entity_wakeup_duration_ratio_standard_deviation.comment": "如果此值设置为任何 > 0 的值，非活动实体的唤醒会分散在一段时间内，而不是大量实体同时唤醒。这会让实体感觉和行为更自然。\n此设置是不活动时长的变异系数，即 σ / μ（标准差与平均值的比值）。\n\n换句话说，此设置就是值 σ，使常规不活动时长乘以因子 normal_distribution(μ = 1, σ)。\n如果给定值 ≤ 0，则禁用可变实体唤醒。",
   "luminol.unsupported.disable_check_for_folia_supported.disable_for_leaves.comment": "禁用对 leaves 插件 folia-supported 的检查。\n注意：启用后将不提供支持。",
   "luminol.unsupported.disable_check_for_folia_supported.disable_for_paper.comment": "禁用对 spigot/bukkit/paper 插件 folia-supported 的检查。\n注意：启用后将不提供支持。",
-  "vanilla.command.datapack.restart": "你需要重启服务器来应用数据包更改。"
+  "vanilla.command.datapack.restart": "你需要重启服务器来应用数据包更改。",
+  "vanilla.command.save-all.refactor.already": "服务器已经在保存中，请等待保存完成……",
+  "vanilla.command.save-all.refactor.failure": "至少有一个区域调度器保存数据失败！",
+  "vanilla.command.save-all.refactor.timeout.line1": "至少有一个区域调度器在保存数据中超时！",
+  "vanilla.command.save-all.refactor.timeout.line2": "{0}个区域调度器的数据需要被保存，但在超时之前只有{1}个区域调度器报告它们的数据已经被保存！"
 }

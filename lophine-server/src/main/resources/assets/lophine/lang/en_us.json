@@ -197,5 +197,9 @@
   "luminol.optimizations.variable_entity_waking_up.entity_wakeup_duration_ratio_standard_deviation.comment": "If this value is set to any value > 0, waking up inactive entities happens spread over time, instead of many entities at once. This makes entities feel and behave more natural.\nThis setting is the coefficient of variation, or σ / μ (the ratio of the standard deviation to the mean) of the inactivity duration.\n\nIn other words, this setting is the value σ, so that the regular inactivity duration will be multiplied by a factor normal_distribution(μ = 1, σ).\nIf a value ≤ 0 is given, variable entity wake-up is disabled.",
   "luminol.unsupported.disable_check_for_folia_supported.disable_for_leaves.comment": "Disable check for folia-supported for leaves plugin.\nATTENTION: No support will be provided if you enabled this.",
   "luminol.unsupported.disable_check_for_folia_supported.disable_for_paper.comment": "Disable check for folia-supported for spigot/bukkit/paper plugin.\nATTENTION: No support will be provided if you enabled this.",
-  "vanilla.command.datapack.restart": "You need to restart server to load datapacks update."
+  "vanilla.command.datapack.restart": "You need to restart server to load datapacks update.",
+  "vanilla.command.save-all.refactor.already": "Server is already in saving! Please wait...",
+  "vanilla.command.save-all.refactor.failure": "At least one region failed to save!",
+  "vanilla.command.save-all.refactor.timeout.line1": "At least one region save data timeout!",
+  "vanilla.command.save-all.refactor.timeout.line2": "Regions need to save expect is {0}, but only {1} saved!"
 }
