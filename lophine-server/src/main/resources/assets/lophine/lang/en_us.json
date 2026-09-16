@@ -155,6 +155,10 @@
   "luminol.command.bar.toggle.only_player": "Only player can display bars!",
   "luminol.command.bar.toggle.player_not_found": "Player {0} was not found!",
   "luminol.command.bar.toggle.true": "Enabled bar type with {0} for {1}",
+  "luminol.config.dialog.addition.info": "Any edit in this text input will not save to file.",
+  "luminol.config.dialog.addition.label": "Additional information of [{0}]",
+  "luminol.config.dialog.comments": "Comments: ",
+  "luminol.config.dialog.suggestions": "Suggestions: ",
   "luminol.experiment.command.enable_command_block.comment": "Force to enable command blocks.\nATTENTION: WOULD CAUSE SERVER CRASHING AS SOME THREADING ISSUE!!!\nDO NOT ENABLE UNLESS YOU KNOW WHAT YOU ARE DOING!!!",
   "luminol.experiment.command.enable_waypoints_and_waypoint_command.comment": "Enable waypoint and waypoint command.\nWARN: Still under testing",
   "luminol.experiment.disable_async_catchers.enabled.comment": "Disable async catcher to prevent some crashes caused by some plugins which supports folia but has issuable logics.\nATTENTION: Would cause region deadlock when getChunkAt was incorrectly called!\nSee: https://github.com/PaperMC/Folia/issues/280 which is resolved in folia(https://github.com/PaperMC/Folia/commit/2e7bc0721af95196c85500c7bb136aeea0bc12ce)\nDO NOT ENABLE UNLESS YOU KNOW WHAT YOU ARE DOING!!!",
@@ -232,5 +236,8 @@
   "vanilla.command.save-all.refactor.already": "Server is already in saving! Please wait...",
   "vanilla.command.save-all.refactor.failure": "At least one region failed to save!",
   "vanilla.command.save-all.refactor.timeout.line1": "At least one region save data timeout!",
-  "vanilla.command.save-all.refactor.timeout.line2": "Regions need to save expect is {0}, but only {1} saved!"
+  "vanilla.command.save-all.refactor.timeout.line2": "Regions need to save expect is {0}, but only {1} saved!",
+  "luminol.unsupported.disable_check_for_folia_supported.disable_for_leaves": "Disable check for leaves plugin",
+  "luminol.unsupported.disable_check_for_folia_supported.disable_for_paper": "Disable check for spigot/bukkit/paper plugin",
+  "luminol.experiment.disable_entity_exception_catchers.enabled": "Disable entity exception catchers"
 }

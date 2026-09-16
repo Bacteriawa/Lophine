@@ -13,10 +13,19 @@ import net.minecraft.world.entity.player.Player;
 import org.bukkit.command.CommandSender;
 
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class ConfigCommandDialog {
-    private static final Set<EnumConfigData> allNeedFeatures = Set.of(EnumConfigData.VALUE, EnumConfigData.COMMENT, EnumConfigData.SUGGESTIONS);
+    private static final Set<EnumConfigData> allNeedFeatures = Set.of(
+            EnumConfigData.VALUE,
+            EnumConfigData.COMMENT,
+            EnumConfigData.SUGGESTIONS,
+            EnumConfigData.LOCALIZED_NAME,
+            EnumConfigData.UNIQUE_ID
+    );
 
     public static void openGui(Player player, String name, ConfigsInstance config) {
         openGui(player, name, config, "");
@@ -107,9 +116,13 @@ public class ConfigCommandDialog {
         }.getType();
         Map<String, String> map = gson.fromJson(fullText, type);
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            config.setConfig(entry.getKey(), entry.getValue());
+            try {
+                int id = Integer.parseInt(entry.getKey());
+                config.setConfig(config.getConfigPathById(id), entry.getValue());
+            } catch (Exception _) {
+            }
         }
-        config.reloadAsync(true).thenAccept(nullValue -> sender.sendMessage(
+        config.reloadAsync(true).thenAccept(_ -> sender.sendMessage(
                 net.kyori.adventure.text.Component
                         .text("Apply config update successfully!")
                         .color(TextColor.color(0, 255, 0))
