@@ -28,7 +28,6 @@ public class ConfigCommandDialog {
 
     public static void openGui(Player player, String name, ConfigsInstance config, String prefix) {
         if (prefix.equals("full")) {
-            Collection<String> allKeys = config.getAllConfigPaths("");
             player.openDialog(
                     ConfigDialogUtil.createHolder(
                             name,
