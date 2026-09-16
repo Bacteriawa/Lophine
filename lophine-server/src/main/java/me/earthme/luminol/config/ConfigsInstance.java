@@ -953,8 +953,11 @@ public class ConfigsInstance implements LuminolConfigsInstance {
                         dataMap.put(feature, suggestions);
                     }
                     case EnumConfigData.LOCALIZED_NAME -> {
-                        String langKey = getName() + "." + key;
-                        dataMap.put(feature, ServerI18nUtil.getLocalizedTextOrDefault(langKey, key));
+                        String name = ServerI18nUtil.getLocalizedText(getName() + "." + key);
+                        if (name.isEmpty()) {
+                            name = ServerI18nUtil.getFormatedLocalizedTextOrDefault("general." + key, key);
+                        }
+                        dataMap.put(feature, name);
                     }
                     case EnumConfigData.UNIQUE_ID -> {
                         for (int i = 0; i < uniqueIdMap.size(); i++) {

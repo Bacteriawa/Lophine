@@ -2,6 +2,7 @@ package me.earthme.luminol.utils.dialog;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import fun.bm.lophine.utils.ServerI18nUtil;
 import me.earthme.luminol.api.config.EnumConfigData;
 import me.earthme.luminol.config.ConfigsInstance;
 import net.kyori.adventure.text.format.TextColor;
@@ -60,12 +61,16 @@ public class ConfigCommandDialog {
 
             // Always create button if there are child paths or if it's a valid config node
             if (!childPaths.isEmpty() || !childKeySingleConfigs.isEmpty()) {
+                String vName = ServerI18nUtil.getLocalizedText(config.getName() + "." + key);
+                if (vName.isEmpty()) {
+                    vName = ServerI18nUtil.getFormatedLocalizedTextOrDefault("general." + key, key);
+                }
                 String raw = name + " open-gui " + key + "$(missing)";
                 StringTemplate template = StringTemplate.fromString(raw);
                 CommandTemplate commandTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
                 builder.addButton(
                         DialogUtil.createButton(
-                                Component.translatable(key),
+                                Component.literal(vName),
                                 300,
                                 Optional.of(commandTemplate)
                         ));
@@ -85,7 +90,7 @@ public class ConfigCommandDialog {
             CommandTemplate commandTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
             builder.addButton(
                     DialogUtil.createButton(
-                            Component.translatable("Show all configs"),
+                            Component.translatable(ServerI18nUtil.getLocalizedText("general.dialog.show_all")),
                             300,
                             Optional.of(commandTemplate)
                     ));
@@ -94,7 +99,7 @@ public class ConfigCommandDialog {
         if (builder.getInputCount() == 0) {
             builder.addButton(
                     DialogUtil.createButton(
-                            Component.translatable("Close"),
+                            Component.translatable(ServerI18nUtil.getLocalizedText("general.dialog.close")),
                             300,
                             Optional.empty()
                     ));
@@ -124,7 +129,7 @@ public class ConfigCommandDialog {
         }
         config.reloadAsync(true).thenAccept(_ -> sender.sendMessage(
                 net.kyori.adventure.text.Component
-                        .text("Apply config update successfully!")
+                        .text(ServerI18nUtil.getLocalizedText("general.config.apply.success"))
                         .color(TextColor.color(0, 255, 0))
         ));
     }
