@@ -20,7 +20,12 @@ on:
         required: false
         default: ""
 
-permissions: write-all
+permissions:
+  contents: read
+
+concurrency:
+  group: lophine-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -32,23 +37,32 @@ jobs:
 
     steps:
       - name: Checkout Git Repository
-        uses: namespacelabs/nscloud-checkout-action@v8
+        uses: namespacelabs/nscloud-checkout-action@v9
         with:
           fetch-depth: 0
-          dissociate: true
-
-      - name: Setup Namespace Gradle Cache
-        uses: namespacelabs/nscloud-cache-action@v1
-        with:
-          cache: gradle
 
       - name: Set Up JDK
         uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: 25
+          cache: ""
 
-      - name: Grant execute permission for gradlew
+      - name: Set Up Namespace Gradle Cache
+        uses: namespacelabs/nscloud-cache-action@v1
+        with:
+          cache: gradle
+
+      - name: Set Up Namespace Gradle Build Cache
+        run: |
+          nsc cache gradle setup --init-gradle /tmp/init.gradle
+
+      - name: Set Up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-disabled: true
+
+      - name: Grant Execute Permission For Gradlew
         run: chmod +x gradlew
 
       - name: Configure Git User Details
@@ -57,20 +71,36 @@ jobs:
           git config --global user.name "LophinelabsCI"
 
       - name: Apply All Patches
-        run: ./gradlew --refresh-dependencies applyAllPatches
+        run: |
+          ./gradlew \
+            --init-script=/tmp/init.gradle \
+            applyAllPatches \
+            --stacktrace
 
       - name: Build Paperclip Jar
-        run: ./gradlew --refresh-dependencies createPaperclipJar
+        run: |
+          ./gradlew \
+            --init-script=/tmp/init.gradle \
+            createPaperclipJar \
+            --stacktrace
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ env.project_id_b }} CI Artifacts
+          name: Lophine CI Artifacts
           path: lophine-server/build/libs/*-paperclip-*.jar
+          if-no-files-found: error
 
       - name: Publish To Repo
+        if: github.event_name == 'workflow_dispatch'
         continue-on-error: true
-        run: ./gradlew --refresh-dependencies generateDevelopmentBundle publish -PpublishDevBundle=true
+        run: |
+          ./gradlew \
+            --init-script=/tmp/init.gradle \
+            generateDevelopmentBundle \
+            publish \
+            -PpublishDevBundle=true \
+            --stacktrace
         env:
           PRIVATE_MAVEN_REPO_PASSWORD: ${{ secrets.PRIVATE_MAVEN_REPO_PASSWORD }}
           PRIVATE_MAVEN_REPO_USERNAME: ${{ secrets.PRIVATE_MAVEN_REPO_USERNAME }}
