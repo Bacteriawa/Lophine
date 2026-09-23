@@ -87,3 +87,11 @@ jobs:
         with:
           name: ${{ env.project_id_b }} CI Artifacts
           path: lophine-server/build/libs/*-paperclip-*.jar
+
+      - name: Publish To Repo
+        if: ( github.event_name != 'pull_request' && !( env.unexpect == 'true' ) && env.flag_push_repo == 'true' && !( inputs.force-push == 'false' )) || inputs.force-push == 'true'
+        continue-on-error: true
+        run: ./gradlew generateDevelopmentBundle publish -PpublishDevBundle=true
+        env:
+          PRIVATE_MAVEN_REPO_PASSWORD: ${{ secrets.PRIVATE_MAVEN_REPO_PASSWORD }}
+          PRIVATE_MAVEN_REPO_USERNAME: ${{ secrets.PRIVATE_MAVEN_REPO_USERNAME }}
