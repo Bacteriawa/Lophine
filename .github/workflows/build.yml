@@ -56,17 +56,6 @@ jobs:
           git config --global user.email "ci@lophinelabs.com"
           git config --global user.name "LophinelabsCI"
 
-          docker run --rm \
-            -v "${{ github.workspace }}:${{ github.workspace }}" \
-            -w "${{ github.workspace }}" \
-            -e PLUGIN_TARGET_URL="$CNB_TARGET_URL" \
-            -e PLUGIN_AUTH_TYPE="https" \
-            -e PLUGIN_USERNAME="cnb" \
-            -e PLUGIN_PASSWORD="$CNB_TOKEN" \
-            -e PLUGIN_FORCE="true" \
-            -e PLUGIN_PUSH_TAGS="true" \
-            tencentcom/git-sync
-
       - name: Apply All Patches
         run: ./gradlew --refresh-dependencies applyAllPatches
 
