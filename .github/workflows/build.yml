@@ -2,16 +2,19 @@ name: Lophine CI
 
 on:
   pull_request:
+
   workflow_dispatch:
     inputs:
       force-release:
         description: "Force disable release if you enter false, force release if you enter true, default release if not released else skip release"
         required: false
         default: ""
+
       force-push:
         description: "Force disable push to repo if you enter false, force push to repo if you enter true, default push if not released else skip push repo"
         required: false
         default: ""
+
       comments:
         description: "Add comments to release"
         required: false
@@ -21,10 +24,12 @@ permissions: write-all
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-bacteriawa
     environment: default
+
     env:
       BUILD_NUMBER: ${{ github.run_number }}
+
     steps:
       - name: Checkout Git Repository
         uses: actions/checkout@v7
@@ -57,20 +62,32 @@ jobs:
           distribution: zulu
           java-version: 25
 
+      # Namespace persistent Gradle cache
+      - name: Setup Namespace Gradle Cache
+        uses: namespacelabs/nscloud-cache-action@v1
+        with:
+          cache: gradle
+
+      # Keep Gradle Actions' configuration features,
+      # but disable its own remote cache because Namespace handles caching.
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: external
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Configure Git User Details
-        run: git config --global user.email "ci@lophinelabs.com" && git config --global user.name "LophinelabsCI"
+        run: |
+          git config --global user.email "ci@lophinelabs.com"
+          git config --global user.name "LophinelabsCI"
 
       - name: Apply All Patches
-        run: ./gradlew --refresh-dependencies applyAllPatches
+        run: ./gradlew applyAllPatches
 
       - name: Build Paperclip Jar
-        run: ./gradlew --refresh-dependencies createPaperclipJar
+        run: ./gradlew createPaperclipJar
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
@@ -86,6 +103,7 @@ jobs:
         if: github.event_name != 'pull_request' && env.flag_release == 'true'
         run: |
           git fetch --tags
+
           if [ -n "$(git tag -l "${{ env.tag }}")" ]; then
             echo "Release already exists"
             release_exists=true
@@ -93,45 +111,69 @@ jobs:
             echo "Release does not exist"
             release_exists=false
           fi
+
           if [ "$release_exists" == "true" ]; then
             counter=1
+
             while [ -n "$(git tag -l "${{ env.tag }}-${counter}")" ]; do
               counter=$((counter + 1))
             done
-            echo "tag=${{ env.tag }}-${counter}" >> $GITHUB_ENV
-            echo "release_count= - ${counter}" >> $GITHUB_ENV
+
+            echo "tag=${{ env.tag }}-${counter}" >> "$GITHUB_ENV"
+            echo "release_count= - ${counter}" >> "$GITHUB_ENV"
+
             release_exists=false
           fi
-          echo "release_exists=${release_exists}" >> $GITHUB_ENV
+
+          echo "release_exists=${release_exists}" >> "$GITHUB_ENV"
 
       - name: Check If Branch In Expectations
         if: github.event_name != 'pull_request' && env.flag_release == 'true'
         run: |
-          if [[ "$GITHUB_REF_NAME" == ver/* ]] || [[ "$GITHUB_REF_NAME" == exp/* ]] || [[ "$GITHUB_REF_NAME" == dev/* ]]; then
+          if [[ "$GITHUB_REF_NAME" == ver/* ]] || \
+             [[ "$GITHUB_REF_NAME" == exp/* ]] || \
+             [[ "$GITHUB_REF_NAME" == dev/* ]]; then
+
             echo "Branch is in expected prefixes"
-            echo "unexpect=false" >> $GITHUB_ENV
+            echo "unexpect=false" >> "$GITHUB_ENV"
           else
             echo "Branch is NOT in expected prefixes"
-            echo "unexpect=true" >> $GITHUB_ENV
+            echo "unexpect=true" >> "$GITHUB_ENV"
           fi
 
       - name: Publish To Repo
-        if: ( github.event_name != 'pull_request' && !( env.unexpect == 'true' ) && env.flag_push_repo == 'true' && !( inputs.force-push == 'false' )) || inputs.force-push == 'true'
+        if: >
+          (
+            github.event_name != 'pull_request' &&
+            env.unexpect != 'true' &&
+            env.flag_push_repo == 'true' &&
+            inputs.force-push != 'false'
+          ) ||
+          inputs.force-push == 'true'
         continue-on-error: true
-        run: ./gradlew --refresh-dependencies generateDevelopmentBundle publish -PpublishDevBundle=true
+        run: ./gradlew generateDevelopmentBundle publish -PpublishDevBundle=true
         env:
           PRIVATE_MAVEN_REPO_PASSWORD: ${{ secrets.PRIVATE_MAVEN_REPO_PASSWORD }}
           PRIVATE_MAVEN_REPO_USERNAME: ${{ secrets.PRIVATE_MAVEN_REPO_USERNAME }}
 
       - name: Create Release - Pre Process
-        if: ( github.event_name != 'pull_request' && env.from_pr_merge != 'true' && !( env.unexpect == 'true' ) && env.flag_release == 'true' && env.release_exists != 'true' && !(inputs.force-release == 'false')) || inputs.force-release == 'true'
+        if: >
+          (
+            github.event_name != 'pull_request' &&
+            env.from_pr_merge != 'true' &&
+            env.unexpect != 'true' &&
+            env.flag_release == 'true' &&
+            env.release_exists != 'true' &&
+            inputs.force-release != 'false'
+          ) ||
+          inputs.force-release == 'true'
         run: |
           if [ "${{ inputs.comments }}" == "" ]; then
             echo "No comments provided"
-            echo "flag_comment=false" >> $GITHUB_ENV
+            echo "flag_comment=false" >> "$GITHUB_ENV"
           else
             echo "Comments provided: ${{ inputs.comments }}"
-            echo "flag_comment=true" >> $GITHUB_ENV
+            echo "flag_comment=true" >> "$GITHUB_ENV"
           fi
 
       - name: Create Release - No Comment
@@ -143,9 +185,12 @@ jobs:
           name: ${{ env.project_id_b }} ${{ env.mcversion }} - ${{ env.commit_id }}${{ env.release_count }}
           body: |
             📦Version: `${{ env.mcversion }}` | Commit ${{ env.commit_id }} [![download](https://img.shields.io/github/downloads/LophineLabs/${{ env.project_id }}/${{ env.tag }}/total?color=red&style=flat-square)](https://github.com/LophineLabs/${{ env.project_id }}/releases/download/${{ env.tag }}/${{ env.jar }})
+
             This release is automatically compiled by GitHub Actions
+
             ### Branch Info
             > ${{ github.ref_name }}
+
             ### Commit Message
             ${{ env.commit_msg }}
           artifacts: ${{ env.jar_dir }}
@@ -163,11 +208,15 @@ jobs:
           name: ${{ env.project_id_b }} ${{ env.mcversion }} - ${{ env.commit_id }}${{ env.release_count }}
           body: |
             📦Version: `${{ env.mcversion }}` | Commit ${{ env.commit_id }} [![download](https://img.shields.io/github/downloads/LophineLabs/${{ env.project_id }}/${{ env.tag }}/total?color=red&style=flat-square)](https://github.com/LophineLabs/${{ env.project_id }}/releases/download/${{ env.tag }}/${{ env.jar }})
+
             This release is automatically compiled by GitHub Actions
+
             ### Comments
             > ${{ inputs.comments }}
+
             ### Branch Info
             > ${{ github.ref_name }}
+
             ### Commit Message
             ${{ env.commit_msg }}
           artifacts: ${{ env.jar_dir }}
@@ -206,16 +255,17 @@ jobs:
 
           echo "Tag synced. Triggering CNB release pipeline..."
 
-          REQUEST_BODY="$(jq -nc \
-            --arg tag "${{ env.tag }}" \
-            --arg branch "${{ github.ref_name }}" \
-            '{
-              branch: $branch,
-              event: "api_trigger_release_sync",
-              env: {
-                RELEASE_TAG: $tag
-              }
-            }'
+          REQUEST_BODY="$(
+            jq -nc \
+              --arg tag "${{ env.tag }}" \
+              --arg branch "${{ github.ref_name }}" \
+              '{
+                branch: $branch,
+                event: "api_trigger_release_sync",
+                env: {
+                  RELEASE_TAG: $tag
+                }
+              }'
           )"
 
           echo "CNB branch: ${{ github.ref_name }}"
