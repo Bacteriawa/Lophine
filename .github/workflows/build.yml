@@ -56,15 +56,6 @@ jobs:
           git config --global user.email "ci@lophinelabs.com"
           git config --global user.name "LophinelabsCI"
 
-      - name: Sync to CNB
-        if: github.event_name != 'pull_request'
-        continue-on-error: true
-        env:
-          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
-          CNB_TARGET_URL: https://cnb.cool/LophineLabs/Lophine.git
-        run: |
-          git fetch --all --tags --force
-
           docker run --rm \
             -v "${{ github.workspace }}:${{ github.workspace }}" \
             -w "${{ github.workspace }}" \
@@ -77,10 +68,10 @@ jobs:
             tencentcom/git-sync
 
       - name: Apply All Patches
-        run: ./gradlew applyAllPatches
+        run: ./gradlew --refresh-dependencies applyAllPatches
 
       - name: Build Paperclip Jar
-        run: ./gradlew createPaperclipJar
+        run: ./gradlew --refresh-dependencies createPaperclipJar
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
@@ -89,9 +80,8 @@ jobs:
           path: lophine-server/build/libs/*-paperclip-*.jar
 
       - name: Publish To Repo
-        if: ( github.event_name != 'pull_request' && !( env.unexpect == 'true' ) && env.flag_push_repo == 'true' && !( inputs.force-push == 'false' )) || inputs.force-push == 'true'
         continue-on-error: true
-        run: ./gradlew generateDevelopmentBundle publish -PpublishDevBundle=true
+        run: ./gradlew --refresh-dependencies generateDevelopmentBundle publish -PpublishDevBundle=true
         env:
           PRIVATE_MAVEN_REPO_PASSWORD: ${{ secrets.PRIVATE_MAVEN_REPO_PASSWORD }}
           PRIVATE_MAVEN_REPO_USERNAME: ${{ secrets.PRIVATE_MAVEN_REPO_USERNAME }}
